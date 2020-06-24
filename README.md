@@ -14,5 +14,8 @@ shotanalyzer uses a aws cli configuration file
 
 ## Running
 
-'pipenv run "python analyzercode/snapshotanalyzer.py'
+'pipenv run "python analyzercode/snapshotanalyzer.py <command> <--project=PROJECT"'
+
+*command* is list, start, stop
+*project* is optional
 
