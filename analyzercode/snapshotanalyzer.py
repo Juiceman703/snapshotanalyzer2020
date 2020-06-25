@@ -13,10 +13,73 @@ def filter_instances(project):
     else:
         instances = ec2.instances.all()
     return instances
-
 @click.group()
+def cli():
+    """Snapshot manages snapshots"""
+
+@cli.group('snapshots')
+def snapshots():
+    """Commands for Snapshots"""
+@snapshots.command('list')
+@click.option('--project', default=None,
+    help="Only snapshots for the project (tag Project:<name>)")
+def list_snapshots(project):
+    "List Volumes Snapshots"
+    instances = filter_instances(project)
+
+    for i in instances:
+        for v in i.volumes.all():
+            for s in v.snapshots.all():
+                print (', '.join((
+                    s.id,
+                    v.id,
+                    i.id,
+                    s.state,
+                    s.progress,
+                    s.start_time.strftime('%c')
+                )))
+    return
+
+@cli.group('volumes')
+def volumes():
+    """Commands for Volumes"""
+@volumes.command('list')
+@click.option('--project', default=None,
+    help="Only volumes for the project (tag Project:<name>)")
+def list_volumes(project):
+    "List EC2 Volumes"
+    instances = filter_instances(project)
+
+    for i in instances:
+        for v in i.volumes.all():
+            print (", ".join((
+                v.id,
+                i.id,
+                v.state,
+                str(v.size) + "Gib",
+                v.encrypted and "Encrypted" or "Not Encrypted"
+            )))
+    return
+
+@cli.group('instances')
 def instances():
     """Commands for instances"""
+
+@instances.command('snapshot',
+    help='Create snapshots of all volumes')
+@click.option('--project', default=None,
+    help='Only instance for project (tag Project:<name>)')
+def create_snapshots(project):
+    "Create shanpshots for EC2 instances"
+
+    instances = filter_instances(project)
+
+    for i in instances:
+        for v in i.volumes.all():
+            print ("Creating snapsho of {0}".format(v.id))
+            v.create_snapshot(Description="Created by our snapshot_analyzer")
+    return
+
 @instances.command('list')
 @click.option('--project', default=None,
     help="Only instances for the project (tag Project:<name>)")
@@ -66,4 +129,4 @@ def start_instances(project):
 
 
 if __name__ == '__main__':
-    instances()
+    cli()
